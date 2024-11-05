@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Flask-specific files
+instance/
+.env
+.flaskenv
+
+# VS Code settings
+.vscode/
+*.code-workspace
+
+# Oracle SQL and database files (if generated)
+*.dbf
+*.log
+*.dmp
+
+# Virtual environments
+venv/
+ENV/
+.venv/
+env/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Pip files
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Python cache files
+*.pyo
+*.pyd
