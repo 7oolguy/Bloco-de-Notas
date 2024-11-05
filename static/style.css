@@ -1,0 +1,241 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #f4f4f9;
+  color: #333;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.container {
+  width: 80%;
+  max-width: 1200px;
+  height: 90vh;
+  margin: 0 auto;
+  /* background-color: black; */
+}
+
+.card {
+  display: flex;
+  row-gap: 10px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: auto;
+  max-width: 25%;
+  height: auto;
+  background-color: azure;
+  border-radius: 20px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+  margin: 25vh auto;
+  padding: 20px;
+  justify-self: center;
+  align-self: center;
+}
+
+.auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+
+.input label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+}
+
+.input input {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+.input input:focus {
+  outline: none;
+  border: 1px solid #333;
+}
+
+.auth button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.3s ease;
+  &:hover {
+    transform: scale(1.05);
+    background-color: #666;
+  }
+}
+
+.card p {
+  font-size: 14px;
+  color: #333;
+  margin-top: 5px;
+  text-align: center;
+  line-height: 1.5;
+  width: 100%;
+  margin: 0 auto;
+}
+.card p a {
+  font-weight: bold;
+  color: rebeccapurple;
+  text-decoration: none;
+}
+
+.logout {
+  margin-top: 20px;
+  color: #333;
+  font-size: 20px;
+  position: absolute;
+  top: 10px;
+  right: 50px;
+}
+.logout a {
+  text-decoration: none;
+  color: #333;
+}
+
+.notas {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: auto;
+  justify-content: center;
+  column-gap: 50px;
+  margin-top: 20vh;
+}
+
+.show-notas {
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+  /* align-items: center; */
+  width: 50%;
+  height: auto;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px;
+}
+.criar-notas {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+  height: auto;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px;
+}
+
+.input textarea {
+  width: 100%;
+  max-width: 600px; /* Max width for the textarea */
+  height: 200px; /* Fixed height */
+  padding: 10px; /* Padding inside the textarea */
+  border: 1px solid #ccc; /* Border color */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 16px; /* Font size */
+  font-family: Arial, sans-serif; /* Font family */
+  color: #333; /* Text color */
+  background-color: #fff; /* Background color */
+  box-shadow: 0 0px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+  resize: none; /* Disable resizing */
+  transition: border-color 0.3s; /* Smooth transition for border color */
+}
+.input textarea:focus {
+  outline: none;
+  border: 1px solid #333; /* Change border color on focus */
+}
+
+.nova-nota-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.nova-nota-form button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: 0.3s ease;
+  &:hover {
+    transform: scale(1.05);
+    background-color: #666;
+  }
+}
+
+.note {
+  margin-top: 10px;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.note .del {
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: red;
+  color: white;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease;
+  width: 32px;
+  text-align: end;
+}
+
+.note .nota-cont .edit {
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: cornflowerblue;
+  color: white;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease;
+  width: auto;
+  text-align: end;
+  margin-top: 20px;
+}
+
+.nota-cont {
+}

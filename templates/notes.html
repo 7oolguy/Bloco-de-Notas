@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="notas">
+            <p class="logout"><a href="{{ url_for('auth.logout') }}">Logout</a></p>
+
+            <div class="show-notas">
+                <h1>Minhas Notas</h1>
+                <!-- Section to display notes -->
+                <div id="notes-container"></div>
+            </div>
+
+            <div class="criar-notas">
+                <!-- Form to create a new note -->
+                <h2>Nova Nota</h2>
+                <form class="nova-nota-form" id="new-note-form">
+                    <div class="input">
+                        <input type="text" id="note-title" placeholder="Título" required>
+                        <textarea id="note-content" placeholder="Conteúdo" required></textarea>
+                    </div>
+                    <button type="submit">Criar Nota</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Fetch and display all notes on page load
+            fetchNotes();
+
+            // Function to fetch notes from the API
+            function fetchNotes() {
+                $.ajax({
+                    url: "/api/notes",
+                    method: "GET",
+                    success: function(response) {
+                        $("#notes-container").empty();
+                        response.forEach(note => {
+                            $("#notes-container").append(`
+                                <div class="note" data-id="${note.id}">
+                                    <div class="nota-cont">
+                                        <h3>${note.title}</h3>
+                                        <p>${note.content}</p>
+                                        <button class='edit' onclick="editNoteForm(${note.id}, '${note.title}', '${note.content}')">Editar</button>
+                                    </div>
+                                    <button class='del' onclick="deleteNote(${note.id})">X</button>
+                                </div>
+                            `);
+                        });
+                    },
+                    error: function(error) {
+                        alert("Erro ao carregar notas.");
+                    }
+                });
+            }
+
+            // Create a new note
+            $("#new-note-form").on("submit", function(event) {
+                event.preventDefault();
+                const title = $("#note-title").val();
+                const content = $("#note-content").val();
+
+                $.ajax({
+                    url: "/api/notes",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ title, content }),
+                    success: function(response) {
+                        alert(response.message);
+                        $("#note-title").val("");
+                        $("#note-content").val("");
+                        fetchNotes();
+                    },
+                    error: function(error) {
+                        alert("Erro ao criar nota.");
+                    }
+                });
+            });
+
+            // Delete a note
+            window.deleteNote = function(noteId) {
+                $.ajax({
+                    url: `/api/notes/${noteId}`,
+                    method: "DELETE",
+                    success: function(response) {
+                        alert(response.message);
+                        fetchNotes();
+                    },
+                    error: function(error) {
+                        alert("Erro ao deletar nota.");
+                    }
+                });
+            };
+
+            // Edit note form
+            window.editNoteForm = function(noteId, title, content) {
+                $("#note-title").val(title);
+                $("#note-content").val(content);
+
+                // Update form to save changes to the existing note
+                $("#new-note-form").off("submit").on("submit", function(event) {
+                    event.preventDefault();
+                    const updatedTitle = $("#note-title").val();
+                    const updatedContent = $("#note-content").val();
+
+                    $.ajax({
+                        url: `/api/notes/${noteId}`,
+                        method: "PUT",
+                        contentType: "application/json",
+                        data: JSON.stringify({ title: updatedTitle, content: updatedContent }),
+                        success: function(response) {
+                            alert(response.message);
+                            $("#note-title").val("");
+                            $("#note-content").val("");
+                            fetchNotes();
+                        },
+                        error: function(error) {
+                            alert("Erro ao atualizar nota.");
+                        }
+                    });
+                });
+            };
+        });
+    </script>
+</body>
+</html>

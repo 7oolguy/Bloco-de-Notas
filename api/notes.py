@@ -1,36 +1,110 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from models import Note
-from app import db
+from extensions import db
+from sqlalchemy.exc import SQLAlchemyError
 
 api = Blueprint('api', __name__)
 
 @api.route('/notes', methods=['GET'])
 @login_required
 def get_notes():
-    #Get notes for the logged - in
-    ...
+    """Obtém todas as notas do usuário logado."""
+    try:
+        # Busca todas as notas que pertencem ao usuário logado
+        notes = Note.query.filter_by(user_id=current_user.id).all()
+        # Retorna uma lista de notas no formato JSON
+        return jsonify([{"id": note.id, "title": note.title, "content": note.content} for note in notes]), 200
+    except SQLAlchemyError as e:
+        # Em caso de erro no banco de dados, retorna erro 500 com detalhes
+        return jsonify({"error": "Falha ao recuperar as notas", "details": str(e)}), 500
 
 @api.route('/notes/<int:note_id>', methods=['GET'])
 @login_required
 def get_note(note_id):
-    # Get note by id
-    ...
+    """Obtém uma nota específica pelo ID para o usuário logado."""
+    try:
+        # Busca uma nota pelo ID e user_id do usuário logado
+        note = Note.query.filter_by(id=note_id, user_id=current_user.id).first()
+        if note is None:
+            # Retorna erro 404 se a nota não for encontrada
+            return jsonify({"error": "Nota não encontrada"}), 404
+        # Retorna a nota no formato JSON
+        return jsonify({"id": note.id, "title": note.title, "content": note.content}), 200
+    except SQLAlchemyError as e:
+        # Em caso de erro no banco de dados, retorna erro 500 com detalhes
+        return jsonify({"error": "Falha ao recuperar a nota", "details": str(e)}), 500
 
 @api.route('/notes', methods=['POST'])
 @login_required
 def create_note():
-    #Create a new note for the logged-in user
-    ...
+    """Cria uma nova nota para o usuário logado."""
+    data = request.get_json()
+    title = data.get('title')
+    content = data.get('content')
+
+    # Validação de dados: título e conteúdo são obrigatórios
+    if not title or not content:
+        return jsonify({"error": "Título e conteúdo são obrigatórios"}), 400
+
+    new_note = Note(title=title, content=content, user_id=current_user.id)
+    try:
+        # Adiciona e confirma a nova nota no banco de dados
+        db.session.add(new_note)
+        db.session.commit()
+        # Retorna mensagem de sucesso e o ID da nova nota
+        return jsonify({"message": "Nota criada com sucesso", "id": new_note.id}), 201
+    except SQLAlchemyError as e:
+        # Em caso de erro, faz rollback e retorna erro 500 com detalhes
+        db.session.rollback()
+        return jsonify({"error": "Falha ao criar nota", "details": str(e)}), 500
 
 @api.route('/notes/<int:note_id>', methods=['PUT'])
 @login_required
 def update_note(note_id):
-    # Update an existing note for the logged-in user
-    ...
+    """Atualiza uma nota existente do usuário logado."""
+    data = request.get_json()
+    title = data.get('title')
+    content = data.get('content')
+
+    try:
+        # Busca a nota pelo ID e user_id do usuário logado
+        note = Note.query.filter_by(id=note_id, user_id=current_user.id).first()
+        if note is None:
+            # Retorna erro 404 se a nota não for encontrada
+            return jsonify({"error": "Nota não encontrada"}), 404
+
+        # Atualiza título e/ou conteúdo se eles forem fornecidos
+        if title:
+            note.title = title
+        if content:
+            note.content = content
+
+        db.session.commit()
+        # Retorna mensagem de sucesso
+        return jsonify({"message": "Nota atualizada com sucesso"}), 200
+    except SQLAlchemyError as e:
+        # Em caso de erro, faz rollback e retorna erro 500 com detalhes
+        db.session.rollback()
+        return jsonify({"error": "Falha ao atualizar nota", "details": str(e)}), 500
 
 @api.route('/notes/<int:note_id>', methods=['DELETE'])
 @login_required
 def delete_note(note_id):
-    # Delete
-    ...
+    """Deleta uma nota específica pelo ID para o usuário logado."""
+    try:
+        # Busca a nota pelo ID e user_id do usuário logado
+        note = Note.query.filter_by(id=note_id, user_id=current_user.id).first()
+        if note is None:
+            # Retorna erro 404 se a nota não for encontrada
+            return jsonify({"error": "Nota não encontrada"}), 404
+
+        # Deleta a nota e confirma no banco de dados
+        db.session.delete(note)
+        db.session.commit()
+        # Retorna mensagem de sucesso
+        return jsonify({"message": "Nota deletada com sucesso"}), 200
+    except SQLAlchemyError as e:
+        # Em caso de erro, faz rollback e retorna erro 500 com detalhes
+        db.session.rollback()
+        return jsonify({"error": "Falha ao deletar nota", "details": str(e)}), 500
