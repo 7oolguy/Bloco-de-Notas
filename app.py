@@ -1,28 +1,34 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
-from extensions import db
-from os import environ
-from dotenv import load_dotenv
+from flask import Flask, request, jsonify, render_template
+import api.notes as n
 
-# Carregar variáveis de ambiente
-load_dotenv()
-
-# Inicializar a aplicação
+# Na linha de comando execute:  flask --app news_service run
 app = Flask(__name__)
 
-
-app.config['SQLALCHEMY_DATABASE_URI'] = environ.get("SQLALCHEMY_DATABASE_URI")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Inicializar a extensão SQLAlchemy
-db.init_app(app)
-from api.notes import api as api_blueprint
-app.register_blueprint(api_blueprint, url_prefix='/api')
-
-@app.route('/')
-def notes():
+@app.route('/', methods=['GET'])
+def db_info():
+    print(jsonify(n.get_db_info()))
     return render_template('notes.html')
 
+@app.route('/notas/', methods=['POST'])
+def notas_create():
+    try:
+        notas = request.get_json()
+        return jsonify(n.create(notas))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(port=5001)
+@app.route('/notas/<int:note_id>', methods=['GET'])
+def notas_read(note_id):  # Change 'id' to 'note_id'
+    notas = {"id": note_id}
+    return jsonify(n.read(notas))
+
+@app.route('/notas/<int:note_id>', methods=['PUT'])
+def notas_update(note_id):  # Change 'id' to 'note_id'
+    notas = request.get_json()
+    notas["id"] = note_id
+    return jsonify(n.update(notas))
+
+@app.route('/notas/<int:note_id>', methods=['DELETE'])
+def notas_delete(note_id):  # Change 'id' to 'note_id'
+    notas = {"id": note_id}
+    return jsonify(n.delete(notas))

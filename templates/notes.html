@@ -1,133 +1,131 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notas</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Notes CRUD</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        form, .response { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .response { background-color: #f9f9f9; }
+        label { display: block; margin-top: 10px; }
+        button { margin-top: 10px; padding: 5px 10px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="notas">
-            <div class="show-notas">
-                <h1>Minhas Notas</h1>
-                <!-- Section to display notes -->
-                <div id="notes-container"></div>
-            </div>
 
-            <div class="criar-notas">
-                <!-- Form to create a new note -->
-                <h2>Nova Nota</h2>
-                <form class="nova-nota-form" id="new-note-form">
-                    <div class="input">
-                        <input type="text" id="note-title" placeholder="Título" required>
-                        <textarea id="note-content" placeholder="Conteúdo" required></textarea>
-                    </div>
-                    <button type="submit">Criar Nota</button>
-                </form>
-            </div>
-        </div>
+    <h1>Notes CRUD Operations</h1>
+
+    <!-- Create Note -->
+    <form id="createForm">
+        <h2>Create Note</h2>
+        <label for="createTitle">Title:</label>
+        <input type="text" id="createTitle" name="title" required>
+
+        <label for="createContent">Content:</label>
+        <textarea id="createContent" name="content" required></textarea>
+
+        <button type="button" onclick="createNote()">Create Note</button>
+    </form>
+
+    <!-- Read Note -->
+    <form id="readForm">
+        <h2>Read Note</h2>
+        <label for="readId">Note ID:</label>
+        <input type="number" id="readId" name="id" required>
+
+        <button type="button" onclick="readNote()">Read Note</button>
+    </form>
+
+    <!-- Update Note -->
+    <form id="updateForm">
+        <h2>Update Note</h2>
+        <label for="updateId">Note ID:</label>
+        <input type="number" id="updateId" name="id" required>
+
+        <label for="updateTitle">New Title:</label>
+        <input type="text" id="updateTitle" name="title">
+
+        <label for="updateContent">New Content:</label>
+        <textarea id="updateContent" name="content"></textarea>
+
+        <button type="button" onclick="updateNote()">Update Note</button>
+    </form>
+
+    <!-- Delete Note -->
+    <form id="deleteForm">
+        <h2>Delete Note</h2>
+        <label for="deleteId">Note ID:</label>
+        <input type="number" id="deleteId" name="id" required>
+
+        <button type="button" onclick="deleteNote()">Delete Note</button>
+    </form>
+
+    <!-- Response Display -->
+    <div class="response" id="responseOutput">
+        <h2>Response:</h2>
+        <pre id="output"></pre>
     </div>
 
     <script>
-        $(document).ready(function() {
-            // Fetch and display all notes on page load
-            fetchNotes();
+        const output = document.getElementById('output');
 
-            // Function to fetch notes from the API
-            function fetchNotes() {
-                $.ajax({
-                    url: "/api/notes",
-                    method: "GET",
-                    success: function(response) {
-                        $("#notes-container").empty();
-                        response.forEach(note => {
-                            $("#notes-container").append(`
-                                <div class="note" data-id="${note.id}">
-                                    <div class="nota-cont">
-                                        <h3>${note.title}</h3>
-                                        <p>${note.content}</p>
-                                        <button class='edit' onclick="editNoteForm(${note.id}, '${note.title}', '${note.content}')">Editar</button>
-                                    </div>
-                                    <button class='del' onclick="deleteNote(${note.id})">X</button>
-                                </div>
-                            `);
-                        });
-                    },
-                    error: function(error) {
-                        alert("Erro ao carregar notas.");
-                    }
-                });
-            }
-
-            // Create a new note
-            $("#new-note-form").on("submit", function(event) {
-                event.preventDefault();
-                const title = $("#note-title").val();
-                const content = $("#note-content").val();
-
-                $.ajax({
-                    url: "/api/notes",
-                    method: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify({ title, content }),
-                    success: function(response) {
-                        alert(response.message);
-                        $("#note-title").val("");
-                        $("#note-content").val("");
-                        fetchNotes();
-                    },
-                    error: function(error) {
-                        alert("Erro ao criar nota.");
-                    }
-                });
-            });
-
-            // Delete a note
-            window.deleteNote = function(noteId) {
-                $.ajax({
-                    url: `/api/notes/${noteId}`,
-                    method: "DELETE",
-                    success: function(response) {
-                        alert(response.message);
-                        fetchNotes();
-                    },
-                    error: function(error) {
-                        alert("Erro ao deletar nota.");
-                    }
-                });
+        // Create Note
+        function createNote() {
+            const data = {
+                title: document.getElementById('createTitle').value,
+                content: document.getElementById('createContent').value
             };
 
-            // Edit note form
-            window.editNoteForm = function(noteId, title, content) {
-                $("#note-title").val(title);
-                $("#note-content").val(content);
+            fetch('/notas/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => { output.textContent = JSON.stringify(data, null, 2); })
+            .catch(error => { output.textContent = 'Error: ' + error; });
+        }
 
-                // Update form to save changes to the existing note
-                $("#new-note-form").off("submit").on("submit", function(event) {
-                    event.preventDefault();
-                    const updatedTitle = $("#note-title").val();
-                    const updatedContent = $("#note-content").val();
+        // Read Note
+        function readNote() {
+            const id = document.getElementById('readId').value;
 
-                    $.ajax({
-                        url: `/api/notes/${noteId}`,
-                        method: "PUT",
-                        contentType: "application/json",
-                        data: JSON.stringify({ title: updatedTitle, content: updatedContent }),
-                        success: function(response) {
-                            alert(response.message);
-                            $("#note-title").val("");
-                            $("#note-content").val("");
-                            fetchNotes();
-                        },
-                        error: function(error) {
-                            alert("Erro ao atualizar nota.");
-                        }
-                    });
-                });
+            fetch(`/notas/${id}`, { method: 'GET' })
+            .then(response => response.json())
+            .then(data => { output.textContent = JSON.stringify(data, null, 2); })
+            .catch(error => { output.textContent = 'Error: ' + error; });
+        }
+
+        // Update Note
+        function updateNote() {
+            const id = document.getElementById('updateId').value;
+            const data = {
+                title: document.getElementById('updateTitle').value,
+                content: document.getElementById('updateContent').value
             };
-        });
+
+            fetch(`/notas/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => { output.textContent = JSON.stringify(data, null, 2); })
+            .catch(error => { output.textContent = 'Error: ' + error; });
+        }
+
+        // Delete Note
+        function deleteNote() {
+            const id = document.getElementById('deleteId').value;
+
+            fetch(`/notas/${id}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => { output.textContent = JSON.stringify(data, null, 2); })
+            .catch(error => { output.textContent = 'Error: ' + error; });
+        }
     </script>
+
 </body>
 </html>

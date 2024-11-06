@@ -1,118 +1,161 @@
-from flask import Blueprint, request, jsonify
-from models import Note
-from extensions import db
-from sqlalchemy.exc import SQLAlchemyError
+import oracledb
+from datetime import datetime
+import uuid
 
-api = Blueprint('api', __name__)
-
-@api.route('/notes', methods=['GET'])
-def get_notes():
-    """Obtém todas as notas."""
+def get_cursor():
+    db_user = 'rm558885'  # username
+    db_key = '140106'     # password
     try:
-        # Busca todas as notas
-        notes = Note.query.all()
-        # Retorna uma lista de notas no formato JSON
-        return jsonify([{"id": note.id, "title": note.title, "content": note.content} for note in notes]), 200
-    except SQLAlchemyError as e:
-        # Em caso de erro no banco de dados, retorna erro 500 com detalhes
-        return jsonify({"error": "Falha ao recuperar as notas", "details": str(e)}), 500
-    
-@api.route('/notes/<int:note_id>', methods=['GET'])
-def get_singleNote(note_id):
-    """Obtém uma nota específica pelo ID."""
-    try:
-        # Busca uma nota pelo ID
-        note = Note.query.get(note_id)
-        if note is None:
-            # Retorna erro 404 se a nota não for encontrada
-            return jsonify({"error": "Nota não encontrada"}), 404
-        # Retorna a nota no formato JSON
-        return jsonify({"id": note.id, "title": note.title, "content": note.content}), 200
-    except SQLAlchemyError as e:
-        # Em caso de erro no banco de dados, retorna erro 500 com detalhes
-        return jsonify({"error": "Falha ao recuperar a nota", "details": str(e)}), 500
-    
-@api.route('/notes/<int:note_id>', methods=['GET'])
-def get_note(note_id):
-    """Obtém uma nota específica pelo ID."""
-    try:
-        # Busca uma nota pelo ID
-        note = Note.query.get(note_id)
-        if note is None:
-            # Retorna erro 404 se a nota não for encontrada
-            return jsonify({"error": "Nota não encontrada"}), 404
-        # Retorna a nota no formato JSON
-        return jsonify({"id": note.id, "title": note.title, "content": note.content}), 200
-    except SQLAlchemyError as e:
-        # Em caso de erro no banco de dados, retorna erro 500 com detalhes
-        return jsonify({"error": "Falha ao recuperar a nota", "details": str(e)}), 500
-@api.route('/notes', methods=['POST'])
-def create_note():
-    """Cria uma nova nota."""
-    data = request.get_json()
-    title = data.get('title')
-    content = data.get('content')
+        connection = oracledb.connect(
+            user=db_user,
+            password=db_key,
+            dsn="oracle.fiap.com.br/orcl"
+        )
+        return connection, connection.cursor()
+    except Exception as err:
+        print("Ops!! - Connect to DB - " + str(datetime.now()) + " - " + str(err))
+        return None, None
 
-    # Validação de dados: título e conteúdo são obrigatórios
-    if not title or not content:
-        return jsonify({"error": "Título e conteúdo são obrigatórios"}), 400
+def create(data):
+    connection, cursor = get_cursor()
+    if not cursor:
+        return {"error": "Failed to connect to the database"}
 
-    new_note = Note(title=title, content=content)
-    try:
-        # Adiciona e confirma a nova nota no banco de dados
-        db.session.add(new_note)
-        db.session.commit()
-        # Retorna mensagem de sucesso e o ID da nova nota
-        return jsonify({"message": "Nota criada com sucesso", "id": new_note.id}), 201
-    except SQLAlchemyError as e:
-        # Em caso de erro, faz rollback e retorna erro 500 com detalhes
-        db.session.rollback()
-        return jsonify({"error": "Falha ao criar nota", "details": str(e)}), 500
-
-@api.route('/notes/<int:note_id>', methods=['PUT'])
-def update_note(note_id):
-    """Atualiza uma nota existente."""
-    data = request.get_json()
-    title = data.get('title')
-    content = data.get('content')
+    # Define SQL as an empty string initially to handle error logging
+    SQL = ""
 
     try:
-        # Busca a nota pelo ID
-        note = Note.query.get(note_id)
-        if note is None:
-            # Retorna erro 404 se a nota não for encontrada
-            return jsonify({"error": "Nota não encontrada"}), 404
+        print("Successfully connected to Oracle Database: Create - " + str(datetime.now()))
 
-        # Atualiza título e/ou conteúdo se eles forem fornecidos
-        if title:
-            note.title = title
-        if content:
-            note.content = content
+        cursor.execute("SELECT MAX(id) FROM nota")
+        max_id = cursor.fetchone()[0]
 
-        db.session.commit()
-        # Retorna mensagem de sucesso
-        return jsonify({"message": "Nota atualizada com sucesso"}), 200
-    except SQLAlchemyError as e:
-        # Em caso de erro, faz rollback e retorna erro 500 com detalhes
-        db.session.rollback()
-        return jsonify({"error": "Falha ao atualizar nota", "details": str(e)}), 500
-@api.route('/notes/<int:note_id>', methods=['DELETE'])
-def delete_note(note_id):
-    """Deleta uma nota específica pelo ID."""
+        new_id = max_id + 1 if max_id is not None else 1
+
+        SQL = f"""INSERT INTO nota
+                  (id, title, content)
+                  VALUES ({new_id},'{data["title"]}', '{data["content"]}')"""
+
+        cursor.execute(SQL)
+        connection.commit()
+        print("Record created successfully.")
+
+    except Exception as err:
+        print("Ops!! - Create - " + str(datetime.now()) + " - " + str(err))
+        print("SQL: ", SQL)  # SQL will now be available for logging even if an error occurs
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def read(data):
+    connection, cursor = get_cursor()
+    data_out = {"now": str(datetime.now())}
+
+    if not cursor:
+        return {"error": "Failed to connect to the database"}
+
     try:
-        # Busca a nota pelo ID
-        note = Note.query.get(note_id)
-        if note is None:
-            # Retorna erro 404 se a nota não for encontrada
-            return jsonify({"error": "Nota não encontrada"}), 404
+        print("Successfully connected to Oracle Database: Read - " + str(datetime.now()))
 
-        # Deleta a nota e confirma no banco de dados
-        db.session.delete(note)
-        db.session.commit()
-        # Retorna mensagem de sucesso
-        return jsonify({"message": "Nota deletada com sucesso"}), 200
-    except SQLAlchemyError as e:
-        # Em caso de erro, faz rollback e retorna erro 500 com detalhes
-        db.session.rollback()
-        return jsonify({"error": "Falha ao deletar nota", "details": str(e)}), 500
-    
+        SQL = f"SELECT * FROM nota WHERE id = {data['id']}"
+        cursor.execute(SQL)
+
+        for registro in cursor:
+            print(f"Registro: {registro}")
+            data_out["id"], data_out["title"], content = registro
+
+            if isinstance(content, oracledb.LOB):
+                data_out["content"] = content.read().decode('utf-8')  # Decode to UTF-8 string
+            else:
+                data_out["content"] = content
+
+        print(data_out)
+
+    except Exception as err:
+        print("Ops!! - Read - " + str(datetime.now()) + " - " + str(err))
+
+    finally:
+        cursor.close()
+        connection.close()
+
+    return data_out
+
+def delete(data):
+    connection, cursor = get_cursor()
+    out_message = {"now": str(datetime.now())}
+
+    if not cursor:
+        return {"error": "Failed to connect to the database"}
+
+    try:
+        print("Successfully connected to Oracle Database: Delete - " + str(datetime.now()))
+
+        SQL = f"DELETE FROM nota WHERE id = {data['id']}"
+        cursor.execute(SQL)
+        connection.commit()
+
+        print("Record deleted successfully.")
+
+    except Exception as err:
+        print("Ops!! - Delete - " + str(datetime.now()) + " - " + str(err))
+        print("SQL: ", SQL)
+        out_message["error"] = str(err)
+
+    finally:
+        cursor.close()
+        connection.close()
+
+    return out_message
+
+def update(data):
+    connection, cursor = get_cursor()
+
+    if not cursor:
+        return {"error": "Failed to connect to the database"}
+
+    try:
+        print("Successfully connected to Oracle Database: Update - " + str(datetime.now()))
+
+        SQL = f"""UPDATE nota
+                  SET title = '{data["title"]}', content = '{data["content"]}'
+                  WHERE id = {data["id"]}"""
+
+        cursor.execute(SQL)
+        connection.commit()
+        print("Record updated successfully.")
+
+    except Exception as err:
+        print("Ops!! - Update - " + str(datetime.now()) + " - " + str(err))
+        print("SQL: ", SQL)
+
+    finally:
+        cursor.close()
+        connection.close()
+
+def get_db_info():
+    connection, cursor = get_cursor()
+    out_message = {"service_time": str(datetime.now())}
+
+    if not cursor:
+        return {"error": "Failed to connect to the database"}
+
+    try:
+        print("Successfully connected to Oracle Database: DB Info - " + str(datetime.now()))
+
+        SQL = "SELECT version, SYSDATE db_time, USER, 'ok' STATUS FROM V$INSTANCE"
+        cursor.execute(SQL)
+
+        for registro in cursor:
+            out_message["db_version"], out_message["now"], out_message["status"] = registro
+
+    except Exception as err:
+        print("Ops!! - DB Info - " + str(datetime.now()) + " - " + str(err))
+        out_message["error"] = str(err)
+
+    finally:
+        cursor.close()
+        connection.close()
+
+    return out_message

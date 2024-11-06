@@ -1,8 +1,5 @@
-# List your dependencies here
-
-Flask
-Flask-SQLAlchemy
-Flask-Login
-Flask-Bcrypt
-oracledb            # For connecting to Oracle Database
-python-dotenv       # For environment variables
+asposestorage==1.0.2
+Flask==3.0.3
+oracledb==2.4.1
+setuptools==70.1.1
+Zope2==4.0

@@ -39,26 +39,6 @@ Instale os pacotes Python necessários listados em **requirements.txt**
 pip install -r requirements.txt
 ```
 
-# Configure as variáveis de Ambiente
-
-Crie um Arquivo **.env** no diretório raiz do projeto com as seguintes configurações
-
-```bash
-SECRET_KEY='sua_chave_secreta'
-SQLALCHEMY_DATABASE_URI='oracle+oracledb://usuario:senha@host_do_banco:porta/nome_do_banco'
-```
-
-Substitua os placeholders com suas credenciais reais do banco de dados e uma chave secreta segura
-
-# Inicialize o Banco de Dados
-
-Abra um shell Python e execute
-
-```bash
-from app import db
-db.create_all()
-```
-
 # Execute o aplicativo
 
 ```bash
@@ -69,16 +49,15 @@ O app vai rodar em **http://127.0.0.1:5000**
 
 # Uso
 
-- Acesse **/auth/signup** para criar uma nova conta
-- Faça login em **/auth/login** para acessar o painel principal de notas
+- Acesse **/** para o menu principal
 - Use o painel para criar, visualizar, editar e deletar suas notas
 
 ## Endpoints API
 
 Os seguintes endpoints de API estão disponiveis para o gerenciamento de notas:
 
-- **GET /api/notes** - Recupera todas as notas do usuário logado.
-- **GET /api/notes/<note_id>** - Recupera uma nota especifica utilizando o ID
-- **POST /api/notes** - Cria uma nova nota.
-- **PUT /api/notes/<note_id>** - Atualiza uma nota existente.
-- **DELETE /api/notes/<note_id>** - Deleta uma nota.
+- **GET /notes** - Recupera todas as notas do usuário logado.
+- **GET /notes/<note_id>** - Recupera uma nota especifica utilizando o ID
+- **POST /notes** - Cria uma nova nota.
+- **PUT /notes/<note_id>** - Atualiza uma nota existente.
+- **DELETE /notes/<note_id>** - Deleta uma nota.
